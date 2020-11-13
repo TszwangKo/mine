@@ -15,6 +15,7 @@ module multiplier_pipelined(
         mp[0] <= a;
         mc[0] <= b;
     end
+    w
     assign acc[0]=0;
 
     /* genvar is a more advanced technique used to create a compile-time loop. All uses
@@ -28,7 +29,7 @@ module multiplier_pipelined(
     end
 
     // Capture the last stage of the chain
-    always_ff @(posedge clk) begin
+    always_ff @(*) begin
         r <= acc[32];
     end
     

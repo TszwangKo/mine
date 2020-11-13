@@ -30,15 +30,14 @@ module multiplier_parallel_tb(
             @(negedge clk)
             $display("a=%d, b=%d, r=%d", a, b, r);
             assert(a*b == r) else $fatal(1, "Product is wrong.");
-
             a = a+32'h23456789;
             b = b+32'h34567891;
         end
-
+        $display("Finished. Total time = %t", $time);
         $finish;
     end
 
-    multiplier_parallel m(
+    multiplier_pipelined m(
         .clk(clk),
         .a(a), .b(b), .r(r)
     );

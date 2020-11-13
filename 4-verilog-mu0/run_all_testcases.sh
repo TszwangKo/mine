@@ -12,5 +12,5 @@ for i in ${TESTCASES} ; do
     # Extract just the testcase name from the filename. See `man basename` for what this command does.
     TESTNAME=$(basename ${i} .asm.txt)
     # Dispatch to the main test-case script
-    ./run_one_testcase.sh ${VARIANT} ${TESTNAME}
+    bash ./run_one_testcase.sh ${VARIANT} ${TESTNAME}
 done

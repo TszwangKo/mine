@@ -8,9 +8,11 @@ module multiplier_pipelined_tb(
 
     localparam integer STEPS = 10000;
 
+
+
     initial begin
         $dumpfile("multiplier_pipelined_tb.vcd");
-        $dumpvars(0, multiplier_pipelined_tb);
+        $dumpvars(1, multiplier_pipelined_tb);
 
         clk = 0;
         #5;
@@ -57,7 +59,7 @@ module multiplier_pipelined_tb(
             $display("a=%d, b=%d, r=%d", a, b, r);
             assert( r == a_d2 * b_d2 ) else $fatal(2, "Wrong output.");
         end
-
+        $display("Finished. Total time = %t", $time);
         $finish;
     end
 
