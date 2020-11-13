@@ -16,11 +16,8 @@ module CPU_MU0_delay0(
     input logic clk,
     input logic rst,
     output logic running,
-    output logic[11:0] address,
-    output logic write,
-    output logic read,
-    output logic[15:0] writedata,
-    input logic[15:0] readdata
+    input logic[2:0] get_status,
+    output logic[1:0] flag
     );
 
     /* Using an enum to define constants */
@@ -41,33 +38,9 @@ module CPU_MU0_delay0(
         FETCH_INSTR = 2'b00,
         EXEC_INSTR = 2'b01,
         HALTED = 2'b10
-    } state_t;
-
-    logic[11:0] pc, pc_next;
-    logic[15:0] acc;
-
-    logic[16:0] instr;
-    opcode_t instr_opcode;
-    logic[11:0] instr_constant;    
+    } state_t; 
 
     logic[1:0] state;
-
-    // Decide what address to put out on the bus, and whether to write
-    assign address = (state==FETCH_INSTR) ? pc : instr_constant;
-    assign write = state==EXEC_INSTR ? instr_opcode==OPCODE_STO : 0;
-    assign read = (state==FETCH_INSTR) ? 1 : (instr_opcode==OPCODE_LDA || instr_opcode==OPCODE_ADD  || instr_opcode==OPCODE_SUB );
-    assign writedata = acc;
-
-    // Break-down the instruction into fields
-    // these are just wires for our convenience
-    assign instr_opcode = instr[15:12];
-    assign instr_constant = instr[11:0];
-
-    // This is used in many places, as most instructions go forwards by one step.
-    // Defining it once makes it more likely the synthesis tool will only create
-    // one concrete instance.
-    wire[11:0] pc_increment;
-    assign pc_increment = pc + 1;
 
     /* We are targetting an FPGA, which means we can specify the power-on value of the
         circuit. So here we set the initial state to 0, and set the output value to
@@ -87,72 +60,26 @@ module CPU_MU0_delay0(
     */
     always @(posedge clk) begin
         if (rst) begin
-            $display("CPU : INFO  : Resetting.");
+            $display("CPU : INFO  : Resetting");//.");
             state <= FETCH_INSTR;
-            pc <= 0;
-            acc <= 0;
             running <= 1;
+            flag <= 1;
         end
         else if (state==FETCH_INSTR) begin
-            $display("CPU : INFO  : Fetching, address=%h.", pc);
-            instr <= readdata;
+            $display("CPU : INFO  : Fetching");//, address=%h.", pc);
             state <= EXEC_INSTR;
+            flag <= 3;
         end
         else if (state==EXEC_INSTR) begin
-            $display("CPU : INFO  : Executing, opcode=%h, acc=%h, imm=%h, readdata=%x", instr_opcode, acc, instr_constant, readdata);
-            case(instr_opcode)
-                OPCODE_LDA: begin
-                    acc <= readdata;
-                    pc <= pc_increment;
-                    state <= FETCH_INSTR;
-                end
-                OPCODE_STO: begin
-                    pc <= pc_increment;
-                    state <= FETCH_INSTR;
-                end
-                OPCODE_ADD: begin
-                    acc <= acc + readdata;
-                    pc <= pc_increment;
-                    state <= FETCH_INSTR;
-                end
-                OPCODE_SUB: begin
-                    acc <= acc - readdata;
-                    pc <= pc_increment;
-                    state <= FETCH_INSTR;
-                end
-                OPCODE_JMP: begin
-                    pc <= instr_constant;
-                    state <= FETCH_INSTR;
-                end
-                OPCODE_JGE: begin
-                    if (acc > 0) begin
-                        pc <= acc;
-                    end
-                    else begin
-                        pc <= pc_increment;
-                    end
-                    state <= FETCH_INSTR;
-                end
-                OPCODE_JNE: begin
-                    if (acc != 0) begin
-                        pc <= instr_constant;
-                    end
-                    else begin
-                        pc <= pc_increment;
-                    end
-                    state <= FETCH_INSTR;
-                end
-                OPCODE_OUT: begin
-                    $display("CPU : OUT   : %d", $signed(acc));
-                    pc <= pc_increment;
-                    state <= FETCH_INSTR;
-                end
-                OPCODE_STP: begin
-                    // Stop the simulation
-                    state <= HALTED;
-                    running <= 0;
-                end
-            endcase
+            $display("CPU : INFO  : Executing");//, opcode=%h, acc=%h, imm=%h, readdata=%x", instr_opcode, acc, instr_constant, readdata);
+            flag <= 1 ;
+            if(get_status==3'b100)begin
+                state <=HALTED;
+                running <=0;
+            end
+            else begin
+                state <= FETCH_INSTR;
+            end
         end
         else if (state==HALTED) begin
             // do nothing

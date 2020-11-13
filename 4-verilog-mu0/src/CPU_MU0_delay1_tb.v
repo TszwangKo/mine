@@ -14,11 +14,14 @@ module CPU_MU0_delay1_tb;
     logic read;
     logic[15:0] writedata;
     logic[15:0] readdata;
+    logic[2:0] get_status;
+    logic[1:0] flag;
 
     RAM_16x4096_delay1 #(RAM_INIT_FILE) ramInst(clk, address, write, read, writedata, readdata);
     
-    CPU_MU0_delay1 cpuInst(clk, rst, running, address, write, read, writedata, readdata);
+    CPU_MU0_delay1 cpuInst(clk, rst, running, get_status, flag);
 
+    CPU_decoder decoder(clk, rst, address, write, read, writedata, readdata, flag, get_status);
     // Generate clock
     initial begin
         clk=0;
